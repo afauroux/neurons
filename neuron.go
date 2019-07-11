@@ -5,6 +5,7 @@ package neurons
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -39,7 +40,7 @@ type Neuron struct {
 
 // NewNeuron creates a neuron with default values
 func NewNeuron() *Neuron {
-	return &Neuron{
+	n := &Neuron{
 		id:        nbNeurones,
 		input:     make(chan int, buffSize),
 		weights:   make(map[int]int),
@@ -50,6 +51,18 @@ func NewNeuron() *Neuron {
 		verbose:   true,
 		alive:     true,
 	}
+	go n.Update()
+	nbNeurones++
+	return n
+}
+
+//Connect two neurons together (pre and post synaptic)
+func Connect(pre, post *Neuron) {
+	post.parents[pre.id] = pre
+	post.weights[pre.id] = rand.Intn(maxSig)
+
+	pre.childs[post.id] = post
+
 }
 
 // Fire a neuron when its potential is above the threshold
@@ -69,7 +82,7 @@ func (n *Neuron) Update() {
 				n.potential = 0
 			}
 			if n.verbose {
-				fmt.Printf("Nr%v: %v", n.id, n.potential)
+				logchan <- fmt.Sprintf("Nr%v: %v", n.id, n.potential)
 			}
 		case id := <-n.input:
 			n.potential += n.weights[id]
