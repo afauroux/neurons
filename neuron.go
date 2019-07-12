@@ -37,6 +37,7 @@ type Neuron struct {
 	Potential int
 	Log       chan string
 	Alive     bool
+	X, Y      int //used for ploting (see gui.go)
 }
 
 // NewNeuron creates a neuron with default values
@@ -51,6 +52,8 @@ func NewNeuron() *Neuron {
 		Potential: 0,
 		Log:       nil,
 		Alive:     true,
+		X:         nbNeurones, // by default its a linear system
+		Y:         0,
 	}
 	go n.Update()
 	nbNeurones++
@@ -60,7 +63,7 @@ func NewNeuron() *Neuron {
 //Connect two neurons together (pre and post synaptic)
 func Connect(pre, post *Neuron) {
 	post.Parents[pre.ID] = pre
-	post.Weights[pre.ID] = rand.Intn(maxSig)
+	post.Weights[pre.ID] = rand.Intn(maxSig*2) - maxSig/2
 
 	pre.Childs[post.ID] = post
 
@@ -68,8 +71,12 @@ func Connect(pre, post *Neuron) {
 
 // Fire a neuron when its potential is above the threshold
 func (n *Neuron) Fire() {
+	if n.Potential < 0 {
+		return
+	}
 	for _, post := range n.Childs {
 		post.Input <- n.ID
+		n.Potential = -10 // negative potential so neuron can fire only after next update
 	}
 }
 
@@ -102,4 +109,24 @@ func (n *Neuron) Update() {
 type Sensor struct {
 	potential int
 	ticker    *time.Ticker
+}
+
+// MakeNeuralNetwork creates a fully connected network with
+// layer sizes defined by shape
+func MakeNeuralNetwork(shape []int) [][]*Neuron {
+	n := make([][]*Neuron, len(shape))
+	for i, s := range shape {
+		n[i] = make([]*Neuron, s)
+		for j := 0; j < s; j++ {
+			n[i][j] = NewNeuron()
+			n[i][j].X = i - len(shape)/2
+			n[i][j].Y = j - s/2
+			if i >= 1 {
+				for k := 0; k < shape[i-1]; k++ {
+					Connect(n[i-1][k], n[i][j])
+				}
+			}
+		}
+	}
+	return n
 }

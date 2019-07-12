@@ -10,65 +10,26 @@ import (
 const radius = 20
 const dist = 40
 const width = 800
-const height = 500
+const height = 600
 
-// DrawNeuralNetwork ibid
-func DrawNeuralNetwork(ctx *canvas.Context, coord map[*Neuron][2]float64, links map[*Neuron]map[int][4]float64) {
-	// Drawing connections
-	for n, m := range links {
-		for id, l := range m {
-			ctx.DrawLine(l[0], l[1], l[2], l[3])
-			w := float64(n.Weights[id]) / float64(maxSig)
-			ctx.SetRGB(w, w, w)
-			ctx.SetLineWidth(2)
-			ctx.Stroke()
-		}
-	}
-	// Drawing neurons
-	for n, c := range coord {
-		//inner neuron represent potential
-		ctx.DrawCircle(c[0], c[1], radius)
-		p := float64(n.Potential) / float64(tresh)
-		ctx.SetRGB(p, p, p)
-		ctx.Fill()
-
-		//contour
-		ctx.DrawCircle(c[0], c[1], radius)
-		ctx.SetRGB(0, 0, 0)
-		ctx.SetLineWidth(2)
-		ctx.Stroke()
-	}
-}
-
-// MakeNeuralNetwork create the coordinates of neurons and of the links connecting them
-func MakeNeuralNetwork(n [][]*Neuron) (coord map[*Neuron][2]float64, links map[*Neuron]map[int][4]float64) {
-	coord = make(map[*Neuron][2]float64)
-	for i, layer := range n {
-		for j, neuron := range layer {
-			coord[neuron] = [2]float64{float64(2*dist*(len(n)/2-i) + width/2), float64(2*dist*(j-len(layer)/2) + height/2)}
-		}
-	}
-	links = make(map[*Neuron]map[int][4]float64) // map[Neuron][Parent.ID]{x0,y0,x1,y1}
-	for _, layer := range n {
-		for _, neuron := range layer {
-			links[neuron] = make(map[int][4]float64, len(neuron.Parents))
-			for _, pre := range neuron.Parents {
-				links[neuron][pre.ID] = [4]float64{coord[pre][0], coord[pre][1], coord[neuron][0], coord[neuron][1]}
-			}
-		}
-	}
-	return coord, links
-}
-
-// TestCanvas tests canvas
-func TestCanvas(n [][]*Neuron) {
+// CreateCanvas tests canvas
+func CreateCanvas(nmap [][]*Neuron) {
 	c := canvas.NewCanvas(&canvas.CanvasConfig{
 		Width:     width,
 		Height:    height,
-		FrameRate: 60,
+		FrameRate: 20,
+		Title:     "Hebbian Discrete LTP Neural network",
 	})
+	// generating list of Coord and Links for faster ploting
+	var coords []*Coord
+	var links []*Link
+	for _, layer := range nmap {
+		for _, n := range layer {
+			coords = append(coords, getCoord(n))
+			links = append(links, getLinks(n)...)
+		}
+	}
 
-	coords, links := MakeNeuralNetwork(n)
 	c.Draw(func(ctx *canvas.Context) {
 		ctx.DrawRectangle(0, 0, float64(width), float64(height))
 		ctx.SetColor(color.White)
@@ -76,12 +37,84 @@ func TestCanvas(n [][]*Neuron) {
 
 		DrawNeuralNetwork(ctx, coords, links)
 		if ctx.IsMouseDragged {
-			for n, c := range coords {
-				if (math.Abs(c[0]-ctx.Mouse.X) <= radius) && (math.Abs(c[1]-ctx.Mouse.Y) <= radius) {
-					n.Fire()
+			for _, c := range coords {
+				if (math.Abs(c.X-ctx.Mouse.X) <= radius) && (math.Abs(c.Y-ctx.Mouse.Y) <= radius) {
+					c.N.Fire()
 				}
 			}
 		}
 
 	})
+}
+
+// DrawNeuralNetwork ibid
+func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
+	// Drawing connections
+	for _, l := range links {
+		ctx.DrawLine(l.X0, l.Y0, l.X1, l.Y1)
+		w := 1 - float64(l.N.Weights[l.ID])/float64(maxSig)
+		if w >= 0 {
+			ctx.SetRGB(0, w, 0)
+		} else {
+			w = -w
+			ctx.SetRGB(w, 0, 0)
+		}
+
+		ctx.SetLineWidth(2)
+		ctx.Stroke()
+
+	}
+	// Drawing neurons
+	for _, c := range coord {
+		//inner neuron represent potential
+		ctx.DrawCircle(c.X, c.Y, radius)
+		p := float64(c.N.Potential) / float64(tresh)
+		ctx.SetRGB(p, p, p)
+		ctx.Fill()
+
+		//contour
+		ctx.DrawCircle(c.X, c.Y, radius)
+		ctx.SetRGB(0, 0, 0)
+		ctx.SetLineWidth(2)
+		ctx.Stroke()
+	}
+}
+
+// Coord maps neurons to coordinates
+type Coord struct {
+	X, Y float64
+	N    *Neuron
+}
+
+// Link is a mapping of synapses to
+// pre and post-synaptic neuron coordinates
+type Link struct {
+	X0, Y0, X1, Y1 float64
+	ID             int
+	N              *Neuron
+}
+
+func getCoord(n *Neuron) *Coord {
+	return &Coord{
+		X: float64(2*dist*n.X + width/2),
+		Y: float64(2*dist*n.Y + height/2),
+		N: n,
+	}
+}
+
+func getLinks(n *Neuron) []*Link {
+	var links []*Link
+	for id, p := range n.Parents {
+		c0 := getCoord(n)
+		c1 := getCoord(p)
+		links = append(links, &Link{
+			X0: c0.X,
+			Y0: c0.Y,
+			X1: c1.X,
+			Y1: c1.Y,
+			ID: id,
+			N:  n,
+		})
+	}
+	return links
 }
