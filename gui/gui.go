@@ -1,9 +1,10 @@
-package neurons
+package gui
 
 import (
 	"image/color"
 	"math"
 
+	nn "github.com/afauroux/neurons/nnetwork"
 	"github.com/h8gi/canvas"
 )
 
@@ -11,13 +12,14 @@ const radius = 20
 const dist = 40
 const width = 800
 const height = 600
+const clickStrength = 20
 
 // CreateCanvas tests canvas
-func CreateCanvas(nmap [][]*Neuron) {
+func CreateCanvas(nmap [][]*nn.Neuron) {
 	c := canvas.NewCanvas(&canvas.CanvasConfig{
 		Width:     width,
 		Height:    height,
-		FrameRate: 20,
+		FrameRate: 60,
 		Title:     "Hebbian Discrete LTP Neural network",
 	})
 	// generating list of Coord and Links for faster ploting
@@ -39,7 +41,7 @@ func CreateCanvas(nmap [][]*Neuron) {
 		if ctx.IsMouseDragged {
 			for _, c := range coords {
 				if (math.Abs(c.X-ctx.Mouse.X) <= radius) && (math.Abs(c.Y-ctx.Mouse.Y) <= radius) {
-					c.N.Fire()
+					c.N.Input <- -1
 				}
 			}
 		}
@@ -52,15 +54,14 @@ func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
 	// Drawing connections
 	for _, l := range links {
 		ctx.DrawLine(l.X0, l.Y0, l.X1, l.Y1)
-		w := 1 - float64(l.N.Weights[l.ID])/float64(maxSig)
+		w := float64(l.N.Weights[l.ID]) / float64(nn.MAXSIG)
 		if w >= 0 {
 			ctx.SetRGB(0, w, 0)
 		} else {
-			w = -w
-			ctx.SetRGB(w, 0, 0)
+			ctx.SetRGB(math.Abs(w), 0, 0)
 		}
 
-		ctx.SetLineWidth(2)
+		ctx.SetLineWidth(4)
 		ctx.Stroke()
 
 	}
@@ -68,13 +69,21 @@ func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
 	for _, c := range coord {
 		//inner neuron represent potential
 		ctx.DrawCircle(c.X, c.Y, radius)
-		p := float64(c.N.Potential) / float64(tresh)
+
+		// p from 0 to 110 neutral 10 -> 0 and 1
+		p := (float64(c.N.Potential) + math.Abs(nn.LOWEND)) / (float64(nn.TRESH) + math.Abs(nn.LOWEND))
+
 		ctx.SetRGB(p, p, p)
 		ctx.Fill()
 
 		//contour
 		ctx.DrawCircle(c.X, c.Y, radius)
-		ctx.SetRGB(0, 0, 0)
+		var r float64
+		if c.N.Potential < 0 {
+			r = 1
+		}
+
+		ctx.SetRGB(r, 0, 0)
 		ctx.SetLineWidth(2)
 		ctx.Stroke()
 	}
@@ -83,7 +92,7 @@ func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
 // Coord maps neurons to coordinates
 type Coord struct {
 	X, Y float64
-	N    *Neuron
+	N    *nn.Neuron
 }
 
 // Link is a mapping of synapses to
@@ -91,10 +100,10 @@ type Coord struct {
 type Link struct {
 	X0, Y0, X1, Y1 float64
 	ID             int
-	N              *Neuron
+	N              *nn.Neuron
 }
 
-func getCoord(n *Neuron) *Coord {
+func getCoord(n *nn.Neuron) *Coord {
 	return &Coord{
 		X: float64(2*dist*n.X + width/2),
 		Y: float64(2*dist*n.Y + height/2),
@@ -102,7 +111,7 @@ func getCoord(n *Neuron) *Coord {
 	}
 }
 
-func getLinks(n *Neuron) []*Link {
+func getLinks(n *nn.Neuron) []*Link {
 	var links []*Link
 	for id, p := range n.Parents {
 		c0 := getCoord(n)
