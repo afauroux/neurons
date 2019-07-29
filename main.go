@@ -34,13 +34,13 @@ func main() {
 			shape[i] = rand.Intn(5) + 1
 		}
 	} else {
-		shape = []int{3, 3, 3, 3}
+		shape = []int{3, 20, 20, 20, 20, 20, 3}
 	}
 	fmt.Println(shape)
-	nmap := nnetwork.MakeNeuralNetwork(shape, true)
-	logchan := make(chan string)
-	go log(logchan)
-	nmap[0][1].Log = logchan
-	nmap[0][2].Log = logchan
+	nmap := nnetwork.MakeNeuralNetwork(shape, true, false, 0.9)
+	//logchan := make(chan string)
+	//go log(logchan)
+	//nmap[0][1].Log = logchan
+	//nmap[0][2].Log = logchan
 	gui.CreateCanvas(nmap)
 }

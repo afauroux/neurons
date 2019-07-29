@@ -4,15 +4,35 @@ import (
 	"image/color"
 	"math"
 
+	"github.com/faiface/pixel/pixelgl"
+
 	nn "github.com/afauroux/neurons/nnetwork"
 	"github.com/h8gi/canvas"
 )
 
-const radius = 20
-const dist = 40
+var radius = 20.0
+var dist = 40.0
+var thickness = 2.0
+
+func scale(s float64) {
+	radius *= s
+	dist *= s
+	thickness *= s
+}
+
+const clickStrength = 20
 const width = 800
 const height = 600
-const clickStrength = 20
+
+func getCoordsandlinks(nmap [][]*nn.Neuron) (coords []*Coord, links []*Link) {
+	for _, layer := range nmap {
+		for _, n := range layer {
+			coords = append(coords, getCoord(n))
+			links = append(links, getLinks(n)...)
+		}
+	}
+	return coords, links
+}
 
 // CreateCanvas tests canvas
 func CreateCanvas(nmap [][]*nn.Neuron) {
@@ -23,14 +43,7 @@ func CreateCanvas(nmap [][]*nn.Neuron) {
 		Title:     "Hebbian Discrete LTP Neural network",
 	})
 	// generating list of Coord and Links for faster ploting
-	var coords []*Coord
-	var links []*Link
-	for _, layer := range nmap {
-		for _, n := range layer {
-			coords = append(coords, getCoord(n))
-			links = append(links, getLinks(n)...)
-		}
-	}
+	coords, links := getCoordsandlinks(nmap)
 
 	c.Draw(func(ctx *canvas.Context) {
 		ctx.DrawRectangle(0, 0, float64(width), float64(height))
@@ -44,6 +57,15 @@ func CreateCanvas(nmap [][]*nn.Neuron) {
 					c.N.Input <- -1
 				}
 			}
+		}
+		if ctx.IsKeyPressed(pixelgl.KeyPageDown) {
+			scale(0.8)
+			coords, links = getCoordsandlinks(nmap)
+		}
+
+		if ctx.IsKeyPressed(pixelgl.KeyPageUp) {
+			scale(1.2)
+			coords, links = getCoordsandlinks(nmap)
 		}
 
 	})
@@ -61,7 +83,7 @@ func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
 			ctx.SetRGB(math.Abs(w), 0, 0)
 		}
 
-		ctx.SetLineWidth(4)
+		ctx.SetLineWidth(thickness * 2)
 		ctx.Stroke()
 
 	}
@@ -84,7 +106,7 @@ func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
 		}
 
 		ctx.SetRGB(r, 0, 0)
-		ctx.SetLineWidth(2)
+		ctx.SetLineWidth(thickness)
 		ctx.Stroke()
 	}
 }
@@ -105,8 +127,8 @@ type Link struct {
 
 func getCoord(n *nn.Neuron) *Coord {
 	return &Coord{
-		X: float64(2*dist*n.X + width/2),
-		Y: float64(2*dist*n.Y + height/2),
+		X: float64(2*int(dist)*n.X + width/2),
+		Y: float64(2*int(dist)*n.Y + height/2),
 		N: n,
 	}
 }

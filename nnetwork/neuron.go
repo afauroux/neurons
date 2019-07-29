@@ -5,6 +5,7 @@ package nnetwork
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -78,7 +79,7 @@ func NewNeuron() *Neuron {
 //Connect two neurons together (pre(n) and post synaptic)
 func (n *Neuron) Connect(post *Neuron) {
 	post.Parents[n.ID] = n
-	post.Weights[n.ID] = MAXSIG //rand.Intn(MAXSIG*2) - MAXSIG
+	post.Weights[n.ID] = rand.Intn(MAXSIG*2) - MAXSIG
 	n.Childs[post.ID] = post
 }
 
