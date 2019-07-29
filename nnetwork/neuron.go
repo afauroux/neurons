@@ -10,7 +10,7 @@ import (
 
 // constantes and globals
 
-// DT is the time between updates
+// DT is the time between potential updates
 const DT = 20 * time.Millisecond
 
 // BUFFSIZE size of the input channels
@@ -75,11 +75,11 @@ func NewNeuron() *Neuron {
 	return n
 }
 
-//Connect two neurons together (pre and post synaptic)
-func Connect(pre, post *Neuron) {
-	post.Parents[pre.ID] = pre
-	post.Weights[pre.ID] = MAXSIG //rand.Intn(MAXSIG*2) - MAXSIG
-	pre.Childs[post.ID] = post
+//Connect two neurons together (pre(n) and post synaptic)
+func (n *Neuron) Connect(post *Neuron) {
+	post.Parents[n.ID] = n
+	post.Weights[n.ID] = MAXSIG //rand.Intn(MAXSIG*2) - MAXSIG
+	n.Childs[post.ID] = post
 }
 
 // Fire a neuron when its potential is above the threshold
