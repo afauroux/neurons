@@ -6,7 +6,7 @@ import (
 
 	"github.com/faiface/pixel/pixelgl"
 
-	nn "github.com/afauroux/neurons/nnetwork"
+	N "github.com/afauroux/neurons/neuron"
 	"github.com/h8gi/canvas"
 )
 
@@ -24,7 +24,7 @@ const clickStrength = 20
 const width = 800
 const height = 600
 
-func getCoordsandlinks(nmap [][]*nn.Neuron) (coords []*Coord, links []*Link) {
+func getCoordsandlinks(nmap [][]N.Neuron) (coords []*Coord, links []*Link) {
 	for _, layer := range nmap {
 		for _, n := range layer {
 			coords = append(coords, getCoord(n))
@@ -35,7 +35,7 @@ func getCoordsandlinks(nmap [][]*nn.Neuron) (coords []*Coord, links []*Link) {
 }
 
 // CreateCanvas tests canvas
-func CreateCanvas(nmap [][]*nn.Neuron) {
+func CreateCanvas(nmap [][]N.Neuron) {
 	c := canvas.NewCanvas(&canvas.CanvasConfig{
 		Width:     width,
 		Height:    height,
@@ -54,7 +54,7 @@ func CreateCanvas(nmap [][]*nn.Neuron) {
 		if ctx.IsMouseDragged {
 			for _, c := range coords {
 				if (math.Abs(c.X-ctx.Mouse.X) <= radius) && (math.Abs(c.Y-ctx.Mouse.Y) <= radius) {
-					c.N.Input <- -1
+					c.N.GetInput() <- -1
 				}
 			}
 		}
@@ -76,7 +76,7 @@ func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
 	// Drawing connections
 	for _, l := range links {
 		ctx.DrawLine(l.X0, l.Y0, l.X1, l.Y1)
-		w := float64(l.N.Weights[l.ID]) / float64(nn.MAXSIG)
+		w := float64(l.N.Weights[l.ID]) / float64(N.MAXSIG)
 		if w >= 0 {
 			ctx.SetRGB(0, w, 0)
 		} else {
@@ -93,7 +93,7 @@ func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
 		ctx.DrawCircle(c.X, c.Y, radius)
 
 		// p from 0 to 110 neutral 10 -> 0 and 1
-		p := (float64(c.N.Potential) + math.Abs(nn.LOWEND)) / (float64(nn.TRESH) + math.Abs(nn.LOWEND))
+		p := (float64(c.N.Potential) + math.Abs(N.LOWEND)) / (float64(N.TRESH) + math.Abs(N.LOWEND))
 
 		ctx.SetRGB(p, p, p)
 		ctx.Fill()
@@ -114,7 +114,7 @@ func DrawNeuralNetwork(ctx *canvas.Context, coord []*Coord, links []*Link) {
 // Coord maps neurons to coordinates
 type Coord struct {
 	X, Y float64
-	N    *nn.Neuron
+	N    N.Neuron
 }
 
 // Link is a mapping of synapses to
@@ -122,20 +122,20 @@ type Coord struct {
 type Link struct {
 	X0, Y0, X1, Y1 float64
 	ID             int
-	N              *nn.Neuron
+	N              N.Neuron
 }
 
-func getCoord(n *nn.Neuron) *Coord {
+func getCoord(n N.Neuron) *Coord {
 	return &Coord{
-		X: float64(2*int(dist)*n.X + width/2),
-		Y: float64(2*int(dist)*n.Y + height/2),
+		X: float64(2*int(dist)*N.GetX() + width/2),
+		Y: float64(2*int(dist)*N.GetY() + height/2),
 		N: n,
 	}
 }
 
-func getLinks(n *nn.Neuron) []*Link {
+func getLinks(n N.Neuron) []*Link {
 	var links []*Link
-	for id, p := range n.Parents {
+	for id, p := range N.GetParents() {
 		c0 := getCoord(n)
 		c1 := getCoord(p)
 		links = append(links, &Link{

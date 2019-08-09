@@ -1,7 +1,4 @@
-// Package nnetwork is an attempt at a neural network simulation
-// with each neurons beeing a goroutine that receive signals of others
-// via channels in a LTP style backpropagation of discrete signal
-package nnetwork
+package neuron
 
 import (
 	"math"
@@ -10,11 +7,11 @@ import (
 
 // Neuron2 same as Neuron but without internal clock
 type Neuron2 struct {
-	ID        int              // id (total number)
-	Input     chan int         // every presynaptic Neuron sends his id
-	Weights   map[int]int      // from the id we know the associated
-	Parents   map[int]*Neuron2 // Neuron and weight
-	Childs    map[int]*Neuron2 // input chanels of all Neurons listening to this one
+	ID        int            // id (total number)
+	Input     chan int       // every presynaptic Neuron sends his id
+	Weights   map[int]int    // from the id we know the associated
+	Parents   map[int]Neuron // Neuron and weight
+	Childs    map[int]Neuron // input chanels of all Neurons listening to this one
 	Thresh    int
 	Damping   int
 	Last      time.Time
@@ -26,18 +23,20 @@ type Neuron2 struct {
 }
 
 // NewNeuron2 creates a neuron with default values
-func NewNeuron2() *Neuron2 {
-	n := &Neuron2{
+func NewNeuron2() Neuron2 {
+	//var last [10]time.Time
+	//last[0] = time.Now()
+	n := Neuron2{
 		ID:        nbNeurones,
 		Input:     make(chan int, BUFFSIZE),
 		Weights:   make(map[int]int),
-		Parents:   make(map[int]*Neuron2),
-		Childs:    make(map[int]*Neuron2),
+		Parents:   make(map[int]Neuron),
+		Childs:    make(map[int]Neuron),
 		Potential: 0,
 		Log:       nil,
 		Last:      time.Now(),
 		Alive:     true,
-		X:         nbNeurones, // by default its a linear system
+		X:         nbNeurones,
 		Y:         0,
 	}
 	go n.Update()
@@ -45,22 +44,15 @@ func NewNeuron2() *Neuron2 {
 	return n
 }
 
-//Connect two neurons together (pre(n) and post synaptic)
-func (n *Neuron2) Connect(post *Neuron2) {
-	post.Parents[n.ID] = n
-	post.Weights[n.ID] = MAXSIG //rand.Intn(MAXSIG*2) - MAXSIG
-	n.Childs[post.ID] = post
-}
-
 // Fire a neuron when its potential is above the threshold
-func (n *Neuron2) Fire() {
+func (n Neuron2) Fire() {
 	time.Sleep(DT)
 	n.Potential = LOWEND // negative potential so neuron can fire only after some regeneration
 	for _, post := range n.Childs {
-		post.Input <- n.ID
+		post.GetInput() <- n.ID
 	}
 	for id, p := range n.Parents {
-		if p.Potential < 0 { //fired recently
+		if p.GetPotential() < 0 { //fired recently
 			n.Weights[id]++ // Long Term Potentiation
 			if n.Weights[id] > MAXSIG {
 				n.Weights[id] = MAXSIG
@@ -71,7 +63,7 @@ func (n *Neuron2) Fire() {
 }
 
 // Update a neuron potential whenever it receive a msg from a dendrite
-func (n *Neuron2) Update() {
+func (n Neuron2) Update() {
 	for n.Alive {
 		ID := <-n.Input
 

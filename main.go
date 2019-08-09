@@ -1,3 +1,6 @@
+// Package neuron is an attempt at a neural network simulation
+// with each neurons beeing a goroutine that receive signals of others
+// via channels in a LTP style backpropagation of discrete signal
 package main
 
 import (
@@ -8,7 +11,7 @@ import (
 	"time"
 
 	"github.com/afauroux/neurons/gui"
-	"github.com/afauroux/neurons/nnetwork"
+	"github.com/afauroux/neurons/network"
 )
 
 // Getxt get some text from user
@@ -34,10 +37,10 @@ func main() {
 			shape[i] = rand.Intn(5) + 1
 		}
 	} else {
-		shape = []int{3, 20, 20, 20, 20, 20, 3}
+		shape = []int{3, 1, 3}
 	}
 	fmt.Println(shape)
-	nmap := nnetwork.MakeNeuralNetwork(shape, true, false, 0.9)
+	nmap := network.MakeNeuralNetwork(shape, false, false, 0.9)
 	//logchan := make(chan string)
 	//go log(logchan)
 	//nmap[0][1].Log = logchan
