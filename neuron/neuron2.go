@@ -12,8 +12,6 @@ type Neuron2 struct {
 	Weights   map[int]int    // from the id we know the associated
 	Parents   map[int]Neuron // Neuron and weight
 	Childs    map[int]Neuron // input chanels of all Neurons listening to this one
-	Thresh    int
-	Damping   int
 	Last      time.Time
 	Potential int
 	Log       chan string
@@ -23,11 +21,11 @@ type Neuron2 struct {
 }
 
 // NewNeuron2 creates a neuron with default values
-func NewNeuron2() Neuron2 {
+func NewNeuron2() (n *Neuron2) {
 	//var last [10]time.Time
 	//last[0] = time.Now()
-	n := Neuron2{
-		ID:        nbNeurones,
+	n = &Neuron2{
+		ID:        generateID(),
 		Input:     make(chan int, BUFFSIZE),
 		Weights:   make(map[int]int),
 		Parents:   make(map[int]Neuron),
@@ -36,23 +34,22 @@ func NewNeuron2() Neuron2 {
 		Log:       nil,
 		Last:      time.Now(),
 		Alive:     true,
-		X:         nbNeurones,
+		X:         0,
 		Y:         0,
 	}
 	go n.Update()
-	nbNeurones++
 	return n
 }
 
 // Fire a neuron when its potential is above the threshold
-func (n Neuron2) Fire() {
+func (n *Neuron2) Fire() {
 	time.Sleep(DT)
 	n.Potential = LOWEND // negative potential so neuron can fire only after some regeneration
 	for _, post := range n.Childs {
-		post.GetInput() <- n.ID
+		post.Input <- n.ID
 	}
 	for id, p := range n.Parents {
-		if p.GetPotential() < 0 { //fired recently
+		if p.Potential < 0 { //fired recently
 			n.Weights[id]++ // Long Term Potentiation
 			if n.Weights[id] > MAXSIG {
 				n.Weights[id] = MAXSIG
@@ -63,7 +60,7 @@ func (n Neuron2) Fire() {
 }
 
 // Update a neuron potential whenever it receive a msg from a dendrite
-func (n Neuron2) Update() {
+func (n *Neuron2) Update() {
 	for n.Alive {
 		ID := <-n.Input
 
@@ -82,11 +79,4 @@ func (n Neuron2) Update() {
 
 	}
 	close(n.Input) //closing input should be catched by parents
-}
-
-// Sensor2 are sensitive neurons that fires at regular rates
-type Sensor2 struct {
-	N      []*Neuron
-	values [][]int // excitation  represents the potential
-	// that will be added to this sensor every tick
 }
