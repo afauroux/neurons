@@ -8,12 +8,12 @@ import (
 
 // MakeNeuralNetwork creates a fully connected network with
 // layer sizes defined by shape
-func MakeNeuralNetwork(shape []int, loop, fullyconnected bool, linkproba float64) [][]N.Neuron1 {
-	n := make([][]N.Neuron1, len(shape))
+func MakeNeuralNetwork(shape []int, loop, fullyconnected bool, linkproba float64) [][]N.Neuron {
+	n := make([][]*N.Neuron, len(shape))
 	for i, s := range shape {
-		n[i] = make([]N.Neuron1, s)
+		n[i] = make([]*N.Neuron, s)
 		for j := 0; j < s; j++ {
-			n[i][j] = N.NewNeuron1()
+			n[i][j] = N.NewNeuron()
 			n[i][j].X = i - len(shape)/2
 			n[i][j].Y = j - s/2
 			if i >= 1 {

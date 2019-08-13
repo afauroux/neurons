@@ -1,4 +1,4 @@
-// Package neuron is an attempt at a neural network simulation
+// Package neurons is an attempt at a neural network simulation
 // with each neurons beeing a goroutine that receive signals of others
 // via channels in a LTP style backpropagation of discrete signal
 package main
