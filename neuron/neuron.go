@@ -16,6 +16,7 @@ type Neuron struct {
 	Clock     *time.Ticker    // internal clock for potential updates
 	Potential int             // the action potential
 	Food      int             // the reward function associated with beeing often firing
+	Last      time.Time       // the time when this neuron last fired
 	Log       chan string     // a log chanel used to print out info
 	Alive     bool            // boolean used to kill the never ending update goroutine
 	layer     int             // layer number if the neurone is in a multilayer network

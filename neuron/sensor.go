@@ -10,8 +10,8 @@ type Sensor struct {
 // MakeXOR make a XOR sensor for testing purposes
 func MakeXOR() *Sensor {
 	var neurons = []*Neuron{
-		NewNeuron(),
-		NewNeuron(),
+		New(),
+		New(),
 	}
 	sensors := &Sensor{
 		Neurons: neurons,
