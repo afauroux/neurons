@@ -22,6 +22,10 @@ type Neuron struct {
 	layer     int             // layer number if the neurone is in a multilayer network
 }
 
+func (n *Neuron) String() string {
+	return fmt.Sprintf("n%v(%3d)", n.ID, n.Potential)
+}
+
 // Connect two neurons together (pre and post synaptic)
 func Connect(pre, post *Neuron) {
 	post.Parents[pre.ID] = pre
@@ -49,6 +53,9 @@ func New() (n *Neuron) {
 
 // Fire a neuron when its potential is above the threshold
 func (n *Neuron) Fire() {
+	if n.Log != nil {
+		n.Log <- fmt.Sprintf("n%v: -- fires --", n.ID)
+	}
 	n.Potential = LOWEND // negative potential so neuron can fire only after some regeneration
 	for _, post := range n.Childs {
 		post.Input <- n.ID
@@ -60,10 +67,13 @@ func (n *Neuron) Fire() {
 			if n.Weights[id] > MAXSIG {
 				n.Weights[id] = MAXSIG
 			}
+			if n.Log != nil {
+				n.Log <- fmt.Sprintf("n%v: new weight[%v]=%v", n.ID, id, n.Weights[id])
+			}
 		}
 	}
-	n.Food += FOODREWARD
-	time.AfterFunc(time.Duration(n.Food)*DT, n.Starve)
+	//n.Food += FOODREWARD
+	//time.AfterFunc(time.Duration(n.Food)*DT, n.Starve)
 
 }
 
@@ -81,6 +91,9 @@ func (n *Neuron) Update() {
 	for n.Alive {
 		select {
 		case <-n.Clock.C:
+			if n.Log != nil {
+				n.Log <- fmt.Sprintf("n%v: %v", n.ID, n.Potential)
+			}
 			if n.Potential == 0 {
 				n.Clock.Stop() // no need to do anything in between excitation so we turn the clock off
 				// it will be restarted the next time the Input chanel will receive a signal
@@ -91,13 +104,13 @@ func (n *Neuron) Update() {
 				n.Fire()
 			} else {
 				n.Potential -= DAMPING
-			}
-
-			if n.Log != nil {
-				n.Log <- fmt.Sprintf("Nr%v: %v", n.ID, n.Potential)
+				if n.Potential < 0 { // the only way to go bellow 0 is after firing
+					n.Potential = 0
+				}
 			}
 
 		case ID := <-n.Input:
+
 			if n.Potential < 0 {
 				break //can't receive signal during recovery
 			}
@@ -107,9 +120,15 @@ func (n *Neuron) Update() {
 				// to excite a neuron artificially a negative iD could be sent
 				// this is used in gui.go to allow user to trigger neurons
 				n.Potential += MAXSIG
+				if n.Log != nil {
+					n.Log <- fmt.Sprintf("n%v: n%v -> %v", n.ID, ID, MAXSIG)
+				}
 			} else {
 				// action of a pre-synaptic neuron onto this one throught a weighted synapse
 				n.Potential += n.Weights[ID]
+				if n.Log != nil {
+					n.Log <- fmt.Sprintf("n%v: n%v -> %v", n.ID, ID, n.Weights[ID])
+				}
 
 				if n.Weights[ID] < 0 { // inhibitory neuron case
 					if oldPot > 0 { // good job, it is actually fighting an excitation
@@ -117,16 +136,22 @@ func (n *Neuron) Update() {
 					}
 				}
 			}
+			// If the neuron was previously dormant we need to reset its ticker
+			if oldPot == 0 && n.Potential > 0 {
+				// a new ticker for triggering updates until the potential
+				// is damped out or the neuron is fired
+				n.Clock = time.NewTicker(DT)
+			}
 
 			// an inibitory neuron cannot
 			// make potential go lower than 0
 			if n.Potential <= 0 {
 				n.Potential = 0
-			} else {
-				// a new ticker for triggering updates until the potential
-				// is damped out or the neuron is fired
-				n.Clock = time.NewTicker(DT)
 			}
+			if n.Potential > 100 {
+				n.Potential = 100
+			}
+
 		}
 	}
 }

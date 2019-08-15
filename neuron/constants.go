@@ -7,7 +7,7 @@ import (
 // constantes and globals
 
 // DT is the time between potential updates
-const DT = 20 * time.Millisecond
+const DT = 200 * time.Millisecond
 
 // BUFFSIZE size of the input channels
 const BUFFSIZE = 100
@@ -16,7 +16,7 @@ const BUFFSIZE = 100
 const TRESH = 100
 
 // DAMPING is the potential lost in one DT
-const DAMPING = 5
+const DAMPING = 1
 
 // LTP is the gain or loss in weight associated with an event causing long term potentiation
 const LTP = 5
@@ -26,7 +26,7 @@ const MAXSIG = 100
 
 // LOWEND is the negative potential after firing
 // that creates a cooldown time
-const LOWEND = -3
+const LOWEND = -10
 
 // FOODREWARD is the reward associated with firing that represent the general activity of one neuron
 // e.g. if FOODREWARD * DT = 20 seconds, and if no firing occur during thos 20s then the neuron
