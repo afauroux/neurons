@@ -8,6 +8,7 @@ import (
 
 	"github.com/faiface/pixel/pixelgl"
 
+	"github.com/afauroux/neurons/network"
 	N "github.com/afauroux/neurons/neuron"
 	"github.com/h8gi/canvas"
 )
@@ -35,7 +36,7 @@ func scale(s float64) {
 }
 
 // CreateCanvas tests canvas
-func CreateCanvas(nmap [][]*N.Neuron) {
+func CreateCanvas(nn *network.Network) {
 	c := canvas.NewCanvas(&canvas.CanvasConfig{
 		Width:     WIDTH,
 		Height:    HEIGHT,
@@ -43,22 +44,23 @@ func CreateCanvas(nmap [][]*N.Neuron) {
 		Title:     "Hebbian Discrete LTP Neural network",
 	})
 	// generating coordinates of neurons from their position in the 2d array and the var "DIST"
-	coords := makeCoords(nmap)
+	coords := makeCoords(nn)
 
 	c.Draw(func(ctx *canvas.Context) {
 		ctx.DrawRectangle(0, 0, float64(WIDTH), float64(HEIGHT))
 		ctx.SetColor(color.White)
 		ctx.Fill()
 
-		drawNeuralNetwork(ctx, nmap, coords)
+		drawNeuralNetwork(ctx, nn, coords)
 		if ctx.IsMouseDragged {
-			for _, layer := range nmap {
+			for _, layer := range nn.Net {
 				for _, n := range layer {
 					dx := math.Abs(coords[n.ID][0]-ctx.Mouse.X) / RADIUS
 					dy := math.Abs(coords[n.ID][1]-ctx.Mouse.Y) / RADIUS
 					// dx and dy are in [0,1] if the user clicked inside this neuron's circle
-					if dx*dy <= 1 {
+					if dx < 1 && dy < 1 {
 						n.Input <- -1
+
 					}
 				}
 			}
@@ -66,12 +68,12 @@ func CreateCanvas(nmap [][]*N.Neuron) {
 		}
 		if ctx.IsKeyPressed(pixelgl.KeyPageDown) {
 			scale(0.8)
-			coords = makeCoords(nmap)
+			coords = makeCoords(nn)
 		}
 
 		if ctx.IsKeyPressed(pixelgl.KeyPageUp) {
 			scale(1.2)
-			coords = makeCoords(nmap)
+			coords = makeCoords(nn)
 		}
 
 	})
@@ -120,8 +122,8 @@ func drawNeuron(ctx *canvas.Context, X, Y float64, potential int) {
 
 // drawNeuralNetwork as a bunch of circle and lines with explicit dynamic colors
 // see drawLink and drawNeuron for more explainations
-func drawNeuralNetwork(ctx *canvas.Context, nmap [][]*N.Neuron, coord map[int][2]float64) {
-	for _, layer := range nmap {
+func drawNeuralNetwork(ctx *canvas.Context, nn *network.Network, coord map[int][2]float64) {
+	for _, layer := range nn.Net {
 		for _, n := range layer {
 			for _, p := range n.Parents {
 				drawLink(ctx,
@@ -132,6 +134,10 @@ func drawNeuralNetwork(ctx *canvas.Context, nmap [][]*N.Neuron, coord map[int][2
 					n.Weights[p.ID],
 				)
 			}
+		}
+	}
+	for _, layer := range nn.Net {
+		for _, n := range layer {
 			drawNeuron(ctx,
 				coord[n.ID][0],
 				coord[n.ID][1],
@@ -141,13 +147,14 @@ func drawNeuralNetwork(ctx *canvas.Context, nmap [][]*N.Neuron, coord map[int][2
 	}
 }
 
-// makeCoords generate a mapping between neurons IDs and their XY coordinates
-func makeCoords(nmap [][]*N.Neuron) (coords map[int][2]float64) {
-	for i, layer := range nmap {
+// makeCoords generate a etping between neurons IDs and their XY coordinates
+func makeCoords(nn *network.Network) (coords map[int][2]float64) {
+	coords = make(map[int][2]float64)
+	for i, layer := range nn.Net {
 		for j, n := range layer {
 			coords[n.ID] = [2]float64{
 				float64(2*int(DIST)*i) + WIDTH/2,
-				float64(2*int(DIST)*j) + HEIGHT/2,
+				float64(2*int(DIST)*(j-len(layer)/2)) + HEIGHT/2,
 			}
 		}
 	}

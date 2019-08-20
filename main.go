@@ -20,9 +20,9 @@ func Getxt() (string, error) {
 	text, err := reader.ReadString('\n')
 	return text, err
 }
-func log(input chan string) {
+func log(input chan string, nn *network.Network) {
 	for msg := range input {
-		fmt.Println(msg)
+		fmt.Println(nn, msg)
 	}
 }
 
@@ -40,10 +40,13 @@ func main() {
 		shape = []int{3, 1, 3}
 	}
 	fmt.Println(shape)
-	nmap := network.MakeNeuralNetwork(shape, false, false, 0.9)
-	//logchan := make(chan string)
-	//go log(logchan)
-	//nmap[0][1].Log = logchan
-	//nmap[0][2].Log = logchan
-	gui.CreateCanvas(nmap)
+	logchan := make(chan string)
+	nn := network.New(shape)
+	for _, n := range nn.Nmap {
+		n.Log = logchan
+	}
+	go log(logchan, nn)
+	fmt.Println(nn)
+	gui.CreateCanvas(nn)
+
 }
