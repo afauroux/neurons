@@ -27,7 +27,7 @@ func New(shape []int) *Network {
 	for i, s := range shape {
 		nn.Net[i] = make([]*N.Neuron, s)
 		for j := 0; j < s; j++ {
-			n := N.New()
+			n := N.NewNeuron()
 			nn.Nmap[n.ID] = n
 			nn.Net[i][j] = n
 		}
