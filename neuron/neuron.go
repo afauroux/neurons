@@ -15,7 +15,7 @@ type Neuron struct {
 	Childs    map[int]*Neuron // all Neurons listening to this one
 	Clock     *time.Ticker    // internal clock for potential updates
 	Potential int             // the action potential
-	Food      int             // the reward function associated with beeing often firing
+	Food      int             // the reward associated with beeing often firing
 	Last      time.Time       // the time when this neuron last fired
 	Log       chan string     // a log chanel used to print out info
 	Alive     bool            // boolean used to kill the never ending update goroutine
@@ -33,8 +33,8 @@ func Connect(pre, post *Neuron) {
 	pre.Childs[post.ID] = post
 }
 
-// New creates a neuron with default values
-func New() (n *Neuron) {
+// NewNeuron creates a neuron with default values
+func NewNeuron() (n *Neuron) {
 	n = &Neuron{
 		ID:        generateID(),
 		Input:     make(chan int, BUFFSIZE),
@@ -43,7 +43,6 @@ func New() (n *Neuron) {
 		Childs:    make(map[int]*Neuron),
 		Clock:     time.NewTicker(DT),
 		Potential: 0,
-		Food:      0,
 		Log:       nil,
 		Alive:     true,
 	}
@@ -72,8 +71,6 @@ func (n *Neuron) Fire() {
 			}
 		}
 	}
-	//n.Food += FOODREWARD
-	//time.AfterFunc(time.Duration(n.Food)*DT, n.Starve)
 
 }
 
@@ -82,11 +79,12 @@ func (n *Neuron) Starve() {
 	if n.Food < 0 {
 		n.Food = 0
 		randID := rand.Intn(n.ID) // ID of the potential should be smaller
-		Connect(nmap[randID], n)
+		fmt.Println(randID)
+		//Connect(nmap[randID], n)
 	}
 }
 
-// Update a neuron potential whenever it receive a msg from a dendrite
+// Update a neuron potential whenever it receive a msg from a dendrite (parent neuron)
 func (n *Neuron) Update() {
 	for n.Alive {
 		select {

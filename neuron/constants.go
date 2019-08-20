@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// constantes and globals
+// ---------------------- Constantes and globals ------------------------------
 
 // DT is the time between potential updates
 const DT = 200 * time.Millisecond
@@ -28,6 +28,8 @@ const MAXSIG = 100
 // that creates a cooldown time
 const LOWEND = -10
 
+// ----------------- Glial cells specific constants ---------------------------
+
 // FOODREWARD is the reward associated with firing that represent the general activity of one neuron
 // e.g. if FOODREWARD * DT = 20 seconds, and if no firing occur during thos 20s then the neuron
 // will have to make new connections to augment its probability to get triggered, but if
@@ -37,14 +39,16 @@ const FOODREWARD = 1000
 // FOODSPLIT is the amount of food which will cause a neuron to split
 const FOODSPLIT = 10000
 
+// TRESHGLIA is the treshold above which a glia fires (starting a calcium like wave)
+const TRESHGLIA = 100
+
+// SPEEDGLIA is the time taken to raise the glia Potential by one (will dictate the wave propagation speed)
+const SPEEDGLIA = 1
+
+// ----------------- Globals and helper functions -----------------------------
+
 // total nb of neurons, used to generate unique IDs
 var nbNeurones = 0
-
-// allNeurones is a mapping between all neurons created and their ids
-var nmap map[int]*Neuron
-
-// nnetwork is a 2D array of neurons composed of neuron layers
-var nnetwork [][]*Neuron
 
 // generateID generate IDs for new neurons
 func generateID() int {
