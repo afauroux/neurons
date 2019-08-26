@@ -59,7 +59,7 @@ func CreateCanvas(nn *network.Network) {
 					dy := math.Abs(coords[n.ID][1]-ctx.Mouse.Y) / RADIUS
 					// dx and dy are in [0,1] if the user clicked inside this neuron's circle
 					if dx < 1 && dy < 1 {
-						n.Input <- -1
+						n.Fire()
 
 					}
 				}

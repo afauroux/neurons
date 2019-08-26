@@ -1,27 +1,38 @@
 package neuron
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Glia emulate astrocyte glial cells
 type Glia struct {
-	ID        int             // a unique identifier (total number of neural cells)
-	Input     chan int        // the input chanel through which all signal arrives
-	Neurons   map[int]*Neuron // all neurons connected to this cell
-	Glias     map[int]*Glia   // all glias connected to this cell
-	Weights   map[int]int     // the weights associated with each connections
-	Potential int             // the activity Potential of this cell
-	Buffer    []int           // a list of all glias and neurons that sent signal since last firing
+	ID        int              // a unique identifier (total number of neural cells)
+	Input     chan int         // the input chanel through which all signal arrives
+	Dendrites map[int]*Synapse // all parents synapse
+	Axones    map[int]*Synapse // all channels (Neurons or Glia) listening to this neuron activity
+	Potential int              // the activity Potential of this cell
+	Store     int              // signals comming in are first stored and potential slowly rise
+	Food      int              // glias food level (firing too often: splits, starving: make new connections)
 }
 
 // NewGlia the default constructor
 func NewGlia() *Glia {
-	var g Glia
-	return &g
+	return &Glia{
+		ID:        generateID(),
+		Input:     make(chan int),
+		Axones:    make(map[int]*Synapse),
+		Dendrites: make(map[int]*Synapse),
+		Potential: 0,
+		Store:     0,
+		Food:      FOODBASE,
+	}
 }
 
 // Fire is the function called when a glial cell fires
 func (g *Glia) Fire() {
-
+	for _, syn := range g.Axones {
+		syn.C <- g.Potential
+	}
 }
 
 // Feed is a function that takes care of feeding (rewarding) neurons that
@@ -56,10 +67,30 @@ func (g *Glia) CheckSynchroNeuro() {
 
 // String return a string representation
 func (g *Glia) String() string {
-	return fmt.Sprintf("G%v", g.ID)
+	return fmt.Sprintf("g%v(%3d)", g.ID, g.Potential)
 }
 
 // Update is the goroutine associated with a Glia that will be executed
 func (g *Glia) Update() {
 
+}
+
+// GetID unique identifier among all cell types
+func (g *Glia) GetID() int {
+	return g.ID
+}
+
+// GetInput the Input chanel on which every cell listens
+func (g *Glia) GetInput() chan int {
+	return g.Input
+}
+
+// GetAxons the output Synapses
+func (g *Glia) GetAxons() map[int]*Synapse {
+	return g.Axones
+}
+
+// GetDendrites the input Synapses
+func (g *Glia) GetDendrites() map[int]*Synapse {
+	return g.Dendrites
 }

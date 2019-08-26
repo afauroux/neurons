@@ -12,12 +12,11 @@ func printlog(t *testing.T, log chan string) {
 }
 func make2connectedNeurons(t *testing.T, weight int) (n1, n2 *Neuron) {
 	logchan := make(chan string)
-	n1 = New()
-	n2 = New()
+	n1 = NewNeuron()
+	n2 = NewNeuron()
 	n1.Log = logchan
 	n2.Log = logchan
-	Connect(n1, n2)
-	n2.Weights[n1.ID] = weight
+	Connect(n1, n2, weight, weight)
 	go printlog(t, logchan)
 	return n1, n2
 }
@@ -59,6 +58,10 @@ func TestAccumulates(t *testing.T) {
 			t.Error("Error: n2 should still be in recovering phase")
 		}
 		time.Sleep(2 * DT)
+	}
+
+	for _, den := range n2.Dendrites {
+		n2.log("syn : %v", den)
 	}
 	waitAllNeuronsOff(t, 10*time.Second, n1, n2)
 }

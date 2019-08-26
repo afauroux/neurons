@@ -47,15 +47,16 @@ block SputterRecomb: {
 P_H_desorption_by_ion = 0.1
 
 block SurfChem: { 
+    ratio_aCaCH = 0.1;
+    ions_knock_h = 0.1;
+
     add_material("a-C",     1e19);      
     add_material("a-C:H",   1e19);     # H terminated sites
-    add_material("graphite", 1e19);
-    set_initial_coverage("a-C:H", 1);
+    set_initial_coverage("a-C:H", (1-ratio_aCaCH));
 
 
     # from Butler and Woodin 1993 k1/k2 at 300k with dominant density of H 
     # [a-C]/[a-CH] = F.Arrhenius(7e13,-7.3, 300)/1e14 = 3.36e-6 
-    ratio_aCaCH = 3.36e-6;
     add_surface_reaction("H",1,1, (1-ratio_aCaCH) ,"a-C","a-C:H", [], []); # Fast reactions
     add_surface_reaction("H",1,1, ratio_aCaCH  ,"a-C:H","a-C", ["H2"], [1.0]); 
 
@@ -71,12 +72,21 @@ block SurfChem: {
     add_surface_deposition("C2H3",1, 1,"a-C","a-C:H","a-C:H", 1, [], []);
 
     # deposition on a-C:H by monoradicals
-    add_surface_deposition("C2H" ,1, 0.9,"a-C:H","a-C:H","a-C:H", 1, [], []); # according to hopf 2002 sticking of C2H ona-CH is 0.9-0.1 = 0.8, but it is in contradiction with mohan
-    add_surface_deposition("C4H2",1, 0.7,"a-C","a-C:H","a-C:H", 1, [], []);   # In Eckert 2008 sticking of C4H2 on H:diamond in [0.5,0.8]
-    add_surface_deposition("C2H3",1,1,"a-C","a-C:H","a-C:H", 1, [], []);
+    # add_surface_deposition("C2H" ,1, 0.9,"a-C:H","a-C:H","a-C:H", 1, [], []); # according to hopf 2002 sticking of C2H ona-CH is 0.9-0.1 = 0.8, but it is in contradiction with mohan
+    # add_surface_deposition("C4H2",1, 0.7,"a-C","a-C:H","a-C:H", 1, [], []);   # In Eckert 2008 sticking of C4H2 on H:diamond in [0.5,0.8]
+    # add_surface_deposition("C2H3",1,1,"a-C","a-C:H","a-C:H", 1, [], []);
 
     # H abstraction by radical
     add_surface_reaction("C2H",1,1,0.1,"a-C:H","a-C", ["C2H2"], [1.0]); # see Hopf 2000 (10.1063/1.372246)
+
+    for(integer i=0;i<PAR.IONS.len;i = i+1 ){
+        add_surface_reaction(PAR.IONS[i],1, 1, ions_knock_h,"a-C:H","a-C", [],[]);
+        if (PAR.IONS[i] == "Arplus") then{
+            add_absorption("Arplus", 1.0);
+        }else{
+            add_implantation(PAR.IONS[i], 1, 1, "a-C:H", [], []);
+        }
+    }
 }
 
 # surface chemistry of ions with the surface emissionapproach:
@@ -105,16 +115,12 @@ block SurfChemIons_Emission: {
 }
 
 block SurfChemIons_Reaction: {
-    add_surface_reaction("Arplus",1, 1, 0.2,"a-C","a-C", ["e", "C"], [PAR.SEY, C_Yield_aC_Ar]); 
-    add_surface_reaction("C2H2plus",1, 1, 0.2,"a-C","a-C", ["e", "C"], [PAR.SEY, C_Yield_aC_C2]); 
-
-    add_surface_reaction("Arplus",1, 1, 0.2,"a-C:H","a-C", ["e", "C"], [PAR.SEY, C_Yield_aCH_Ar]); 
-    add_surface_reaction("C2H2plus",1, 1, 0.2,"a-C:H","a-C", ["e", "C"], [PAR.SEY, C_Yield_aCH_Ar]); 
-
-    add_surface_reaction("Arplus",1, 1, 0.2,"graphite","graphite", ["e", "C"], [PAR.SEY, 1]); 
-    add_surface_reaction("C2H2plus",1, 1, 0.2,"graphite","graphite", ["e", "C"], [PAR.SEY, 1]); 
+    for(integer i=0;i<PAR.IONS.len;i = i+1 ){
+        add_surface_reaction(PAR.IONS[i],1, 1, 1,"a-C","a-C", [],[]);
+        add_surface_reaction(PAR.IONS[i],1, 1, PAR.IONS_KNOCK_H,"a-C:H","a-C", [],[]);
+        add_surface_reaction(PAR.IONS[i],1, 1, 1-PAR.IONS_KNOCK_H,"a-C:H","a-C:H", [],[]);
+    }
 }
-
 
     add_surface_reaction("C2H", 1, 1, 3.36e-6 ,"a-C:H","a-C", ["C2H2"], [1.0]);
     # from Butler and Woodin 1993 

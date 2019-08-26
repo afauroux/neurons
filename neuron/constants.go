@@ -7,13 +7,13 @@ import (
 // ---------------------- Constantes and globals ------------------------------
 
 // DT is the time between potential updates
-const DT = 200 * time.Millisecond
-
-// BUFFSIZE size of the input channels
-const BUFFSIZE = 100
+const DT = 20 * time.Millisecond
 
 // TRESH potentials reaching this causes firing
 const TRESH = 100
+
+// BUFFSIZE size of the input channels
+const BUFFSIZE = TRESH
 
 // DAMPING is the potential lost in one DT
 const DAMPING = 1
@@ -36,6 +36,9 @@ const LOWEND = -10
 // a lot of firing occured and n.Food > FOODSPLIT then the neuron will multiply
 const FOODREWARD = 1000
 
+// FOODBASE is the base level for food
+const FOODBASE = 2 * FOODREWARD
+
 // FOODSPLIT is the amount of food which will cause a neuron to split
 const FOODSPLIT = 10000
 
@@ -50,7 +53,7 @@ const SPEEDGLIA = 1
 // total nb of neurons, used to generate unique IDs
 var nbNeurones = 0
 
-// generateID generate IDs for new neurons
+// generateID generate IDs for new neurons or new glias (only one count)
 func generateID() int {
 	nbNeurones++
 	return nbNeurones
