@@ -1,4 +1,4 @@
-package neuron
+package neuron3
 
 import (
 	"time"
@@ -15,10 +15,10 @@ const TRESH = 100
 // BUFFSIZE size of the input channels
 const BUFFSIZE = TRESH
 
-// DAMPING is the potential lost in one DT
-const DAMPING = 1
+// DAMPING is the potential lost (in percentage) in one DT
+const DAMPING = 3 * DT
 
-// LTP is the gain or loss in weight associated with an event causing long term potentiation
+// LTP is the gain or loss in weight (in percentage) associated with an event causing long term potentiation
 const LTP = 0.05
 
 // MAXSIG is the maximum signal strengh

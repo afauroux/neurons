@@ -26,7 +26,7 @@ func log(input chan string, nn *network.Network) {
 	}
 }
 
-func main() {
+func default(){
 	random := false
 	var shape []int
 	if random {
@@ -48,5 +48,9 @@ func main() {
 	go log(logchan, nn)
 	fmt.Println(nn)
 	gui.CreateCanvas(nn)
+}
 
+func main() {
+	//default()
+	test()
 }

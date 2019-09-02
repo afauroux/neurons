@@ -1,32 +1,36 @@
-package neuron
+package neuron4
 
 import (
 	"time"
 )
 
 // ---------------------- Constantes and globals ------------------------------
+const eps = 0.05
 
 // DT is the time between potential updates
 const DT = 20 * time.Millisecond
 
 // TRESH potentials reaching this causes firing
-const TRESH = 100
+const TRESH = 100.0
 
 // BUFFSIZE size of the input channels
 const BUFFSIZE = TRESH
 
-// DAMPING is the potential lost in one DT
-const DAMPING = 1
+// DAMPING is the potential lost (in percentage) in one DT
+const DAMPING = 3 * DT
 
-// LTP is the gain or loss in weight associated with an event causing long term potentiation
+// LTP is the gain or loss in weight (in percentage) associated with an event causing long term potentiation
 const LTP = 0.05
 
+// LTD is the gain or loss in weight (in percentage) associated with an event causing long term potentiation
+const LTD = 0.05
+
 // MAXSIG is the maximum signal strengh
-const MAXSIG = 100
+const MAXSIG = 100.0
 
 // LOWEND is the negative potential after firing
 // that creates a cooldown time
-const LOWEND = -10
+const LOWEND = -10.0
 
 // ----------------- Glial cells specific constants ---------------------------
 
@@ -34,19 +38,28 @@ const LOWEND = -10
 // e.g. if FOODREWARD * DT = 20 seconds, and if no firing occur during thos 20s then the neuron
 // will have to make new connections to augment its probability to get triggered, but if
 // a lot of firing occured and n.Food > FOODSPLIT then the neuron will multiply
-const FOODREWARD = 1000
+const FOODREWARD = 1000.0
 
 // FOODBASE is the base level for food
 const FOODBASE = 2 * FOODREWARD
 
 // FOODSPLIT is the amount of food which will cause a neuron to split
-const FOODSPLIT = 10000
+const FOODSPLIT = 10000.0
 
 // TRESHGLIA is the treshold above which a glia fires (starting a calcium like wave)
-const TRESHGLIA = 100
+const TRESHGLIA = 100.0
 
-// SPEEDGLIA is the time taken to raise the glia Potential by one (will dictate the wave propagation speed)
-const SPEEDGLIA = 1
+// DELAYGLIA is the time taken to raise the glia Potential to the maximum
+const DELAYGLIA = 1.0
+
+// DAMPINGGLIA is the damping half life of the glia potential
+const DAMPINGGLIA = DAMPING
+
+// ACTIVATION ...
+const ACTIVATION = 0.80
+
+// SENSITIVITY ...
+const SENSITIVITY = 100
 
 // ----------------- Globals and helper functions -----------------------------
 

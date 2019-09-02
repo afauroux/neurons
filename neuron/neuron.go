@@ -18,7 +18,6 @@ func (n Neuron) log(str string, values ...interface{}) {
 type Neuron struct {
 	ID        int              // id (total number of neurons)
 	Input     chan int         // Neuron signal receiver
-	Dendrites map[int]*Synapse // all parents synapse
 	Axones    map[int]*Synapse // all channels (Neurons or Glia) listening to this neuron activity
 	Potential int              // the action potential
 	Clock     *time.Ticker     // internal clock for potential updates
@@ -69,6 +68,7 @@ func (n *Neuron) Fire() {
 		n.log("n%v: new weight[%v]=%v", n.ID, id, n.Dendrites[id].Weight)
 
 	}
+	time.AfterFu
 
 }
 
@@ -147,29 +147,12 @@ func (n *Neuron) Update() {
 					// we create a new ticker for triggering updates until the potential
 					// is damped out or the neuron is fired
 					n.Clock = time.NewTicker(DT)
+					c := time.NewTimer(DT)
+					c.Stop()
+
 				}
 
 			}
 		}
 	}
-}
-
-// GetID unique identifier among all cell types
-func (n *Neuron) GetID() int {
-	return n.ID
-}
-
-// GetInput the Input chanel on which every cell listens
-func (n *Neuron) GetInput() chan int {
-	return n.Input
-}
-
-// GetAxons the output Synapses
-func (n *Neuron) GetAxons() *map[int]*Synapse {
-	return &n.Axones
-}
-
-// GetDendrites the input Synapses
-func (n *Neuron) GetDendrites() *map[int]*Synapse {
-	return &n.Dendrites
 }
