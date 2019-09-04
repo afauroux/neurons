@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-
-	"github.com/afauroux/neurons/utils"
 )
 
 func (n Neuron) log(str string, values ...interface{}) {
@@ -20,10 +18,9 @@ type Neuron struct {
 	Input     chan int         // Neuron signal receiver
 	Dendrites map[int]*Synapse // all parents synapse
 	Axones    map[int]*Synapse // all channels (Neurons or Glia) listening to this neuron activity
-	Potential int              // the action potential
+	Potential ActionPotential  // the action potential
 	Clock     *time.Ticker     // internal clock for potential updates
 	Food      int              // the reward associated with beeing often firing
-	Buffer    utils.Buffer     // a buffer containing the received IDs with multiplicity corresponding to weight
 	Log       chan string      // a log chanel used to print out info
 	Alive     bool             // boolean used to kill the never ending update goroutine
 }
@@ -40,7 +37,7 @@ func NewNeuron() (n *Neuron) {
 		Dendrites: make(map[int]*Synapse),
 		Axones:    make(map[int]*Synapse),
 		Clock:     time.NewTicker(DT),
-		Potential: 0,
+		Potential: NewActionPotential(),
 		Food:      0,
 		Log:       nil,
 		Alive:     true,
@@ -52,14 +49,11 @@ func NewNeuron() (n *Neuron) {
 // Fire a neuron when its potential is above the threshold
 func (n *Neuron) Fire() {
 	n.log("n%v: -- fires --", n.ID)
-	n.Potential = LOWEND // negative potential so neuron can fire only after some regeneration
+	n.Potential.Value = LOWEND // negative potential so neuron can fire only after some regeneration
 	for _, synapse := range n.Axones {
 		synapse.C <- n.ID // we send our ID to all listening chanels (Axones)
 	}
-	inbuff := make(map[int]bool)
-	for !n.Buffer.Empty() {
-		inbuff[n.Buffer.Pop()] = true
-	}
+	
 
 	for id := range inbuff {
 		n.Dendrites[id].Weight += LTP // Long Term Potentiation
@@ -67,9 +61,7 @@ func (n *Neuron) Fire() {
 			n.Dendrites[id].Weight = MAXSIG
 		}
 		n.log("n%v: new weight[%v]=%v", n.ID, id, n.Dendrites[id].Weight)
-
 	}
-
 }
 
 // Starve ...
@@ -80,29 +72,6 @@ func (n *Neuron) Starve() {
 		fmt.Println(randID)
 		//Connect(nmap[randID], n)
 	}
-}
-
-//RaisePotential is used to raise the potential and fill the buffer
-func (n *Neuron) RaisePotential(amount, ID int) {
-	n.Potential += amount
-	if ID > 0 {
-		for i := 0; i < amount; i++ {
-			n.Buffer.Push(ID)
-		}
-	}
-}
-
-// LowerPotential is used to lower the potential and empty the buffer
-// return false if the buffer is totally depleted
-func (n *Neuron) LowerPotential(amount int) bool {
-	for i := amount; i > 0; i-- {
-		if n.Buffer.Empty() {
-			return false
-		}
-		n.Potential--
-		n.Buffer.Pop()
-	}
-	return true
 }
 
 // Update a neuron potential whenever it receive a msg from a dendrite (parent neuron)
