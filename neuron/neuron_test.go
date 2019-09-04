@@ -63,5 +63,6 @@ func TestAccumulates(t *testing.T) {
 	for _, den := range n2.Dendrites {
 		n2.log("syn : %v", den)
 	}
+	n1.Fire()
 	waitAllNeuronsOff(t, 10*time.Second, n1, n2)
 }

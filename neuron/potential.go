@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 package neuron
 
 import (
@@ -65,3 +66,13 @@ type CalciumPotential struct {
 	Value  int
 	Buffer utils.Buffer
 }
+=======
+package neuron
+
+type Excitable interface {
+	Update()
+	RaisePotential(*Synapse) bool
+	LowerPotential(int) bool
+	Fire()
+}
+>>>>>>> 5979cd04d1ca70df62bff3d2ab1f66332b5a3eeb

@@ -1,4 +1,4 @@
-package neuron
+package neuron2
 
 import (
 	"time"
