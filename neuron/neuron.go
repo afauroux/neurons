@@ -61,11 +61,6 @@ func (n *Neuron) Fire() {
 		}
 		n.log("n%v: new weight[%v]=%v", n.ID, id, n.Dendrites[id].Weight)
 	}
-<<<<<<< HEAD
-=======
-	time.AfterFu
-
->>>>>>> 5979cd04d1ca70df62bff3d2ab1f66332b5a3eeb
 }
 
 // Starve ...

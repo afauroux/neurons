@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 package neuron
 
 import (
@@ -36,14 +35,14 @@ func (p *ActionPotential) Raise(amount, ID int) {
 	}
 }
 
-func (p *ActionPotential) GetInBuffer(){
+func (p *ActionPotential) GetInBuffer() {
 	inbuff := make(map[int]bool)
-	
+
 	for !n.Buffer.Empty() {
 		inbuff[n.Buffer.Pop()] = true
 	}
 
-	return 
+	return
 }
 
 // Lower is used to lower the potential and empty the buffer
@@ -66,13 +65,3 @@ type CalciumPotential struct {
 	Value  int
 	Buffer utils.Buffer
 }
-=======
-package neuron
-
-type Excitable interface {
-	Update()
-	RaisePotential(*Synapse) bool
-	LowerPotential(int) bool
-	Fire()
-}
->>>>>>> 5979cd04d1ca70df62bff3d2ab1f66332b5a3eeb
