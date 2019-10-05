@@ -2,6 +2,8 @@ package neuron
 
 import (
 	"fmt"
+
+	"github.com/afauroux/neurons/utils"
 )
 
 // Glia emulate astrocyte glial cells
@@ -11,6 +13,7 @@ type Glia struct {
 	Dendrites map[int]*Synapse // all parents synapse
 	Axones    map[int]*Synapse // all channels (Neurons or Glia) listening to this neuron activity
 	Potential int              // the activity Potential of this cell
+	Buffer    utils.Buffer     // a buffer containing the received IDs with multiplicity corresponding to weight
 	Store     int              // signals comming in are first stored and potential slowly rise
 	Food      int              // glias food level (firing too often: splits, starving: make new connections)
 }
@@ -23,7 +26,7 @@ func NewGlia() *Glia {
 		Axones:    make(map[int]*Synapse),
 		Dendrites: make(map[int]*Synapse),
 		Potential: 0,
-		Store:     0,
+		Buffer:    []int{},
 		Food:      FOODBASE,
 	}
 }
