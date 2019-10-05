@@ -5,7 +5,9 @@ import (
 )
 
 // ---------------------- Constantes and globals ------------------------------
-const eps = 0.05
+
+//EPS is a small float (bellow which for ex. exponantials are consider to reach 0)
+const EPS = 0.05
 
 // DT is the time between potential updates
 const DT = 20 * time.Millisecond
@@ -19,11 +21,11 @@ const BUFFSIZE = TRESH
 // DAMPING is the potential lost (in percentage) in one DT
 const DAMPING = 3 * DT
 
-// LTP is the gain or loss in weight (in percentage) associated with an event causing long term potentiation
-const LTP = 0.05
+// LTP is the gain in weight (in percentage) associated with an event causing long term potentiation
+const LTP = 5 //0.05
 
-// LTD is the gain or loss in weight (in percentage) associated with an event causing long term potentiation
-const LTD = 0.05
+// LTD is the loss in weight (in percentage) associated with an event causing long term depotentiation
+const LTD = 5 //0.05
 
 // MAXSIG is the maximum signal strengh
 const MAXSIG = 100.0
@@ -55,11 +57,8 @@ const DELAYGLIA = 1.0
 // DAMPINGGLIA is the damping half life of the glia potential
 const DAMPINGGLIA = DAMPING
 
-// ACTIVATION ...
-const ACTIVATION = 0.80
-
-// SENSITIVITY ...
-const SENSITIVITY = 100
+// GLIAMEANPOT ...
+const GLIAMEANPOT = 50.0
 
 // ----------------- Globals and helper functions -----------------------------
 

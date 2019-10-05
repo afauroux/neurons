@@ -19,7 +19,7 @@ const BUFFSIZE = TRESH
 const DAMPING = 1
 
 // LTP is the gain or loss in weight associated with an event causing long term potentiation
-const LTP = 0.05
+const LTP = 5
 
 // MAXSIG is the maximum signal strengh
 const MAXSIG = 100

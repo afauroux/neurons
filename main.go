@@ -52,5 +52,6 @@ func default(){
 
 func main() {
 	//default()
-	test()
+	//test()
+	fmt.Println('hello')
 }

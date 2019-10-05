@@ -18,6 +18,7 @@ func (n Neuron) log(str string, values ...interface{}) {
 type Neuron struct {
 	ID        int              // id (total number of neurons)
 	Input     chan int         // Neuron signal receiver
+	Dendrites map[int]*Synapse // all channels (Neurons or Glia) listening to this neuron activity
 	Axones    map[int]*Synapse // all channels (Neurons or Glia) listening to this neuron activity
 	Potential int              // the action potential
 	Clock     *time.Ticker     // internal clock for potential updates
@@ -68,7 +69,7 @@ func (n *Neuron) Fire() {
 		n.log("n%v: new weight[%v]=%v", n.ID, id, n.Dendrites[id].Weight)
 
 	}
-	time.AfterFu
+	//time.AfterFu
 
 }
 
