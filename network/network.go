@@ -1,90 +1,69 @@
+// Package network is a packarge that deals withh collection of Neurons and updates
 package network
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
-
 	N "github.com/afauroux/neurons/neuron"
 )
 
-// Network is the base class representing a neural net
+// Network grouping of neurons accessible by arrays or map
 type Network struct {
-	Nmap map[int]*N.Neuron // a map for easy acces of a neuron struct from its ID
-	Net  [][]*N.Neuron     // neural net structure
+	NN         [][]*Neuron
+	Nmap       map[int]*Neuron
+	excited    map[int]*Neuron
+	currenTick int
 }
 
-func (nn *Network) String() string {
-	return fmt.Sprintf("%v", nn.Net)
+func (net *Network) String() string {
+	return fmt.Sprintf("%v", net.NN)
 }
 
-// New create a new neural net with given shape
-func New(shape []int) *Network {
-	nn := &Network{
-		Nmap: make(map[int]*N.Neuron),
-		Net:  make([][]*N.Neuron, len(shape)),
+// NewNetwork generates a neural network
+func NewNetwork(shape []int) *Network {
+	net := &Network{
+		NN:      make([][]*Neuron, len(shape)),
+		Nmap:    make(map[int]*Neuron),
+		excited: make(map[int]*Neuron),
 	}
+
 	for i, s := range shape {
-		nn.Net[i] = make([]*N.Neuron, s)
+		net.NN[i] = make([]*Neuron, s)
 		for j := 0; j < s; j++ {
-			n := N.NewNeuron()
-			nn.Nmap[n.ID] = n
-			nn.Net[i][j] = n
+			n := NewNeuron(net)
+			net.NN[i][j] = n
+			net.Nmap[n.ID] = n
 		}
 	}
-	nn.DefaultConnect()
-	return nn
+	return net
 }
 
-// DefaultConnect will fully connect every neurons to all the previous layers ones
-// and to all the others in the same layer but with inhibitory connections
-func (nn *Network) DefaultConnect() {
-	nn.Connect(nn.PeerConnect(-N.MAXSIG, N.MAXSIG, 100), nn.PeerConnect(-N.MAXSIG, 0, 0))
-}
-
-// PeerConnect is an helper functions that return a function
-// that connect 2 neurons together with probability 'proba' (an int from 0 to 100)
-// and with a weight choosen randomly between wmin a wmax
-// it is used to provide argument for the network.Connect function
-func (nn *Network) PeerConnect(wmin, wmax, proba int) func(*N.Neuron, *N.Neuron) {
-	return func(pre, post *N.Neuron) {
-		if rand.Intn(100) <= proba {
-			N.Connect(nn.Nmap[pre.ID], nn.Nmap[post.ID])
-			nn.Nmap[post.ID].Weights[pre.ID] = wmin + int(float64(wmax-wmin)*rand.Float64())
-		}
-	}
-}
-
-// Connect is creating all the links between neurons from this neural network.
-// *funcParents* and *funcNeighbours* are two functions that will be executed
-// between each neurons and the ones in respectively the previous or same layer.
-// Those functions should take as imput two neurons *ID* (pre and post synaptic)
-func (nn *Network) Connect(funcParents, funcNeighbours func(*N.Neuron, *N.Neuron)) {
-	for i, layer := range nn.Net {
-		for _, n := range layer {
+// RandomConnectLayers connects neurons within layers and to previous layers in a random way
+func (net *Network) RandomConnectLayers(probainter, probalayer, weight float64) {
+	for i, layer := range net.NN {
+		for j, post := range layer {
+			for k, pre := range layer {
+				if j == k {
+					continue
+				}
+				if rand.Float64() <= probalayer {
+					Connect(pre, post, weight, true)
+				}
+			}
 			if i > 0 {
-				for _, n2 := range nn.Net[i-1] {
-					funcParents(n2, n)
-				}
-			}
-			for _, n2 := range nn.Net[i] {
-				if n2.ID != n.ID {
-					funcNeighbours(n2, n)
+				for _, pre := range net.NN[i-1] {
+					if rand.Float64() <= probainter {
+						Connect(pre, post, weight, false)
+					}
 				}
 			}
 		}
 	}
 }
 
-// AddNeuron allows adding a neuron to a neural network
-func (nn *Network) AddNeuron(n *N.Neuron, layer int) error {
-	if layer == len(nn.Net)+1 {
-		nn.Net = append(nn.Net, []*N.Neuron{n})
-	} else if layer < len(nn.Net) {
-		nn.Net[layer] = append(nn.Net[layer], n)
-	} else {
-		return errors.New("Can't add neuron to a layer which is non existing and not the next unfilled one")
-	}
-	nn.Nmap[n.ID] = n
-	return nil
+// Connect two neurons together
+func Connect(pre, post *Neuron, weight float64, inib bool) {
+	s := NewSynapse(pre, post, weight, inib)
+	pre.Axones = append(pre.Axones, s)
+	post.Dendrites = append(post.Dendrites, s)
 }

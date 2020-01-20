@@ -5,32 +5,48 @@ import (
 	"math/rand"
 )
 
-// Connectable an interface to connect together different types of neurons, glias, sensors etc...
-type Connectable interface {
-	Connect(*Synapse)
-}
-
-// Synapse the link between all neurons cells
+// Synapse is a weighted link bewteen two neurons
 type Synapse struct {
-	C           chan int //the receiving chanel of the post synaptic cell
-	Weight      int      // the weight associated with this synapse
-	Sensitivity int      // the sensitivity multiplier contolled by glial cells
+	Pre, Post   *Neuron
+	Weight      float64
+	Sensitivity float64
+	inib        bool
 }
 
-// NewSynapse create a new excitatory or inhibitory synapse
-func NewSynapse(input chan *Synapse) *Synapse {
-	return &Synapse{
-		C:           input,
-		Weight:      rand.Intn(2*MAXSIG) - MAXSIG,
-		Sensitivity: 1,
+// SignedWeight is the negative weight if s.inib is true (inhibitory synapse)
+func (s *Synapse) SignedWeight() float64 {
+	var i float64 = 1
+	if s.inib {
+		i = -1
 	}
+	return s.Weight * i
 }
 
 func (s *Synapse) String() string {
-	return fmt.Sprintf("s: %v x %v", s.Weight, s.Sensitivity)
+	return fmt.Sprintf("S(%v->%v){%.2f,%.2f,%v}", s.Pre, s.Post, s.Weight, s.Sensitivity, s.inib)
 }
 
-// Potentiate or weaken a synapse by dw
-func (s *Synapse) Potentiate(dw int) {
-	s.Weight += dw
+// NewSynapse generates a new Synapse with random weight
+func NewSynapse(pre, post *Neuron, weight float64, inib bool) *Synapse {
+	if weight == 0 {
+		weight = rand.Float64() * MAXSIG
+	}
+	return &Synapse{
+		Pre:         pre,
+		Post:        post,
+		Weight:      weight,
+		Sensitivity: 1,
+		inib:        inib,
+	}
+}
+
+// ChangeWeight changes the synaptic weight
+func (s *Synapse) ChangeWeight(multiplicator float64) {
+	s.Weight *= multiplicator
+	if s.Weight > MAXSIG {
+		s.Weight = MAXSIG
+	}
+	if s.Weight <= 0 {
+		s.Weight = 0
+	}
 }

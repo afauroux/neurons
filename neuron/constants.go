@@ -10,23 +10,25 @@ import (
 const DT = 20 * time.Millisecond
 
 // TRESH potentials reaching this causes firing
-const TRESH = 100
+const TRESH float64 = 100
 
-// BUFFSIZE size of the input channels
-const BUFFSIZE = TRESH
+// DAMPING is the exponential decrease time constant of neuron potentials
+const DAMPING float64 = 10
 
-// DAMPING is the potential lost in one DT
-const DAMPING = 1
+// LTP is the gain in weight associated with an event causing long term potentiation
+const LTP float64 = 1.2
 
-// LTP is the gain or loss in weight associated with an event causing long term potentiation
-const LTP = 5
+// LTD is the loss in weight associated with an event causing long term depotentiation
+const LTD float64 = 0.8
 
 // MAXSIG is the maximum signal strengh
-const MAXSIG = 100
+const MAXSIG float64 = 100
 
 // LOWEND is the negative potential after firing
 // that creates a cooldown time
-const LOWEND = -10
+const LOWEND float64 = -0.02
+
+const eps = 0.01
 
 // ----------------- Glial cells specific constants ---------------------------
 
@@ -47,14 +49,3 @@ const TRESHGLIA = 100
 
 // SPEEDGLIA is the time taken to raise the glia Potential by one (will dictate the wave propagation speed)
 const SPEEDGLIA = 1
-
-// ----------------- Globals and helper functions -----------------------------
-
-// total nb of neurons, used to generate unique IDs
-var nbNeurones = 0
-
-// generateID generate IDs for new neurons or new glias (only one count)
-func generateID() int {
-	nbNeurones++
-	return nbNeurones
-}
