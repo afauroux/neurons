@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	NN "github.com/afauroux/neurons/network
-	"
+	NN "github.com/afauroux/neurons/network"
 )
 
 // Neuron is an exitable node with many input and output synapses
